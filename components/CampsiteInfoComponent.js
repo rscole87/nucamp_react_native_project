@@ -22,6 +22,7 @@ const mapDispatchToProps = {
 function RenderCampsite(props) {
   const campsite = props.campsite;
   const recognizeDrag = ({dx}) => (dx < -200) ? true : false;
+  const recognizeComment = ({dx}) => (dx > 200) ? true : false;
   const view = React.createRef();
 
   const panResponder = PanResponder.create({
@@ -50,6 +51,8 @@ function RenderCampsite(props) {
           ],
           {cancelable: false}
         )
+      } else if (recognizeComment(gestureState)){
+        props.handleComment();
       }
       return true
     }
@@ -143,7 +146,7 @@ class CampsiteInfo extends Component {
 
     return (
       <ScrollView>
-        <RenderCampsite campsite={campsite} favorite={this.props.favorites.includes(campsiteId)} markFavorite={() => this.markFavorite(campsiteId)} onShowModal={() => this.toggleModal()} />
+        <RenderCampsite campsite={campsite} favorite={this.props.favorites.includes(campsiteId)} markFavorite={() => this.markFavorite(campsiteId)} onShowModal={() => this.toggleModal()} handleComment={() => this.handleComment(campsiteId)}/>
         <RenderComments comments={comments} />
 
         <Modal animationType={"slide"} transparent={false} visible={this.state.showModal} onRequestClose={() => this.toggleModal()}>
