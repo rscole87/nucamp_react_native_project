@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Text, View, ScrollView, FlatList, Modal, Button, StyleSheet, Alert, PanResponder } from "react-native";
+import { Text, View, ScrollView, FlatList, Modal, Button, StyleSheet, Alert, PanResponder, Share } from "react-native";
 import { Card, Icon, Rating, Input } from "react-native-elements";
 import { connect } from "react-redux";
 import { baseUrl } from "../shared/baseUrl";
@@ -21,58 +21,65 @@ const mapDispatchToProps = {
 
 function RenderCampsite(props) {
   const campsite = props.campsite;
-  const recognizeDrag = ({dx}) => (dx < -200) ? true : false;
-  const recognizeComment = ({dx}) => (dx > 200) ? true : false;
+  const recognizeDrag = ({ dx }) => (dx < -200 ? true : false);
+  const recognizeComment = ({ dx }) => (dx > 200 ? true : false);
   const view = React.createRef();
 
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onPanResponderGrant: () => {
-      view.current.rubberBand(1000)
-      .then(endState => console.log(endState.finished ? 'finished' : 'canceled'));
-    },  
+      view.current.rubberBand(1000).then((endState) => console.log(endState.finished ? "finished" : "canceled"));
+    },
     onPanResponderEnd: (e, gestureState) => {
-      console.log('pan responder end', gestureState);
+      console.log("pan responder end", gestureState);
       if (recognizeDrag(gestureState)) {
         Alert.alert(
-          'Add Favorite',
+          "Add Favorite",
           `Are you sure you wish to add ${campsite.name} to favorite? `,
           [
             {
-              text: 'Cancel',
-              style: 'cancel',
-              onPress: () => console.log('Cancel Pressed')
+              text: "Cancel",
+              style: "cancel",
+              onPress: () => console.log("Cancel Pressed"),
             },
             {
-              text: 'OK',
-              onPress: () => props.favorite ?
-                console.log('Already set as favorite') : props.markFavorite()
-            }
+              text: "OK",
+              onPress: () => (props.favorite ? console.log("Already set as favorite") : props.markFavorite()),
+            },
           ],
-          {cancelable: false}
-        )
-      } else if (recognizeComment(gestureState)){
+          { cancelable: false }
+        );
+      } else if (recognizeComment(gestureState)) {
         props.handleComment();
       }
-      return true
-    }
-  })
+      return true;
+    },
+  });
+
+  const shareCampsite = (title, message, url) => {
+    Share.share(
+      {
+        title,
+        message: `${title}: ${message} ${url}`,
+        url,
+      },
+      {
+        dialogTitle: `Share ${title}`
+      }
+    );
+  };
 
   if (campsite) {
     return (
-      <Animatable.View 
-        animation="fadeInDown" 
-        duration={2000} 
-        delay={1000}
-        ref={view}
-        {...panResponder.panHandlers}
-        >
+      <Animatable.View animation="fadeInDown" duration={2000} delay={1000} ref={view} {...panResponder.panHandlers}>
         <Card featuredTitle={campsite.name} image={{ uri: baseUrl + campsite.image }}>
           <Text style={{ margin: 10 }}>{campsite.description}</Text>
           <View style={styles.cardRow}>
             <Icon name={props.favorite ? "heart" : "heart-o"} type="font-awesome" color="#f50" raised reverse onPress={() => (props.favorite ? console.log("Already set as a favorite") : props.markFavorite())} />
 
             <Icon name="pencil" type="font-awesome" color="#5637DD" raised reverse onPress={() => props.onShowModal()} />
+
+            <Icon name={"share"} type="font-awesome" color="#5637DD" raised reverse onPress={() => shareCampsite(campsite.name, campsite.description, baseUrl + campsite.image)}/>
           </View>
         </Card>
       </Animatable.View>
@@ -146,7 +153,7 @@ class CampsiteInfo extends Component {
 
     return (
       <ScrollView>
-        <RenderCampsite campsite={campsite} favorite={this.props.favorites.includes(campsiteId)} markFavorite={() => this.markFavorite(campsiteId)} onShowModal={() => this.toggleModal()} handleComment={() => this.handleComment(campsiteId)}/>
+        <RenderCampsite campsite={campsite} favorite={this.props.favorites.includes(campsiteId)} markFavorite={() => this.markFavorite(campsiteId)} onShowModal={() => this.toggleModal()} handleComment={() => this.handleComment(campsiteId)} />
         <RenderComments comments={comments} />
 
         <Modal animationType={"slide"} transparent={false} visible={this.state.showModal} onRequestClose={() => this.toggleModal()}>
